@@ -345,9 +345,6 @@ class Instance(Item):
         self.ids = []
         self.schema.update({
             IsChecked: "publish",
-
-            # Merge copy of both family and families data members
-            Families: "__families__",
         })
 
     def append(self, item):
@@ -367,10 +364,6 @@ class Instance(Item):
         item.data["_has_succeeded"] = False
         item.data["_has_failed"] = False
         item.data["_is_idle"] = True
-
-        # Merge `family` and `families` for backwards compatibility
-        item.data["__families__"] = ([item.data["family"]] +
-                                     item.data.get("families", []))
 
         return super(Instance, self).append(item)
 

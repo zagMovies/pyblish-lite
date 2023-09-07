@@ -239,7 +239,7 @@ class Window(QtWidgets.QDialog):
          ____________________________
         |                            |
         | An Item              23 ms |
-        | - family                   |
+        | - families                   |
         |                            |
         |----------------------------|
         |                            |
@@ -838,11 +838,6 @@ class Window(QtWidgets.QDialog):
         for instance in self.controller.context:
             if instance.id not in models["instances"].ids:
                 models["instances"].append(instance)
-
-            family = instance.data["family"]
-            if family:
-                plugins_filter = self.data["models"]["filter"]
-                plugins_filter.add_inclusion(role="families", value=family)
 
             families = instance.data.get("families")
             if families:
