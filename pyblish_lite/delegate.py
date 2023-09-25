@@ -4,6 +4,7 @@ from .vendor.Qt import QtWidgets, QtGui, QtCore
 
 from . import model
 from .awesome import tags as awesome
+import pyblish.api
 
 colors = {
     "failed": QtGui.QColor("#ff4a4a"),
@@ -46,6 +47,14 @@ icons = {
 }
 
 
+plugin_icons = {
+    pyblish.api.CollectorOrder: awesome['check-circle'],
+    pyblish.api.ValidatorOrder: awesome['check-circle'],
+    pyblish.api.ExtractorOrder: awesome['check-circle'],
+    pyblish.api.IntegratorOrder: awesome['check-circle'],
+}
+
+
 class Item(QtWidgets.QStyledItemDelegate):
     """Generic delegate for model items"""
 
@@ -80,10 +89,10 @@ class Item(QtWidgets.QStyledItemDelegate):
             check_color = colors["ok"]
 
         # Add icon to specify plugin type
-        if float(index.data(model.Order)) == -0.5:
-            plugin_icon = awesome['check-circle']
-            icon_rect = QtCore.QRectF(body_rect)
-            painter.drawText(icon_rect, plugin_icon)
+        # Import plugins order
+        plugin_icon = plugin_icons.get(float(index.data(model.Order)), awesome['question'])
+        icon_rect = QtCore.QRectF(body_rect)
+        painter.drawText(icon_rect, plugin_icon)
 
         metrics = painter.fontMetrics()
 

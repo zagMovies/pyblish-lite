@@ -11,7 +11,7 @@ description = \
 
 authors = ['Abstract Factory and Contributors marcus@abstractfactory.com']
 
-requires = ['pyblish_base-1.4+']
+requires = ['python-3+<4']
 
 
 def commands():
