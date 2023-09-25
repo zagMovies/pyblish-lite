@@ -131,6 +131,8 @@ class Controller(QtCore.QObject):
 
         try:
             result = pyblish.plugin.process(plugin, self.context, instance)
+            # Specify plugin type in result
+            result['order'] = plugin.order
 
         except Exception as e:
             raise Exception("Unknown error: %s" % e)

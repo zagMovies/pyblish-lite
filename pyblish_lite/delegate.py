@@ -59,9 +59,9 @@ class Item(QtWidgets.QStyledItemDelegate):
         body_rect = QtCore.QRectF(option.rect)
 
         check_rect = QtCore.QRectF(body_rect)
-        check_rect.setWidth(20)
+        check_rect.moveBottomLeft(QtCore.QPointF(body_rect.bottomLeft().x() + 15, body_rect.bottomLeft().y() + 3))
+        check_rect.setWidth(10)
         check_rect.setHeight(check_rect.width())
-        check_rect.adjust(6, 6, -6, -6)
 
         check_color = colors["idle"]
         if index.data(model.IsProcessing) is True:
@@ -79,10 +79,16 @@ class Item(QtWidgets.QStyledItemDelegate):
         elif index.data(model.HasProcessed) is True:
             check_color = colors["ok"]
 
+        # Add icon to specify plugin type
+        if float(index.data(model.Order)) == -0.5:
+            plugin_icon = awesome['check-circle']
+            icon_rect = QtCore.QRectF(body_rect)
+            painter.drawText(icon_rect, plugin_icon)
+
         metrics = painter.fontMetrics()
 
         label_rect = QtCore.QRectF(option.rect.adjusted(
-            check_rect.width() + 15, 2, 0, -2))
+            check_rect.width() + 25, 2, 0, -2))
 
         assert label_rect.width() > 0
 
