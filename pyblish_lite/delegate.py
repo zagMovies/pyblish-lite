@@ -97,7 +97,7 @@ class Item(QtWidgets.QStyledItemDelegate):
         metrics = painter.fontMetrics()
 
         label_rect = QtCore.QRectF(option.rect.adjusted(
-            check_rect.width() + 25, 2, 0, -2))
+            check_rect.width() + 25, 0, 0, -2))
 
         assert label_rect.width() > 0
 
