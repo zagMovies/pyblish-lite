@@ -48,10 +48,10 @@ icons = {
 
 
 plugin_icons = {
-    pyblish.api.CollectorOrder: awesome['check-circle'],
-    pyblish.api.ValidatorOrder: awesome['check-circle'],
-    pyblish.api.ExtractorOrder: awesome['check-circle'],
-    pyblish.api.IntegratorOrder: awesome['check-circle'],
+    pyblish.api.CollectorOrder: awesome['download'],
+    pyblish.api.ValidatorOrder: awesome['check-square'],
+    pyblish.api.ExtractorOrder: awesome['sign-out'],
+    pyblish.api.IntegratorOrder: awesome['recycle'],
 }
 
 
