@@ -562,6 +562,21 @@ class Window(QtWidgets.QDialog):
 
         index.model().setData(index, state, model.Expanded)
 
+    def on_item_clicked(self, index, state):
+        if state is None:
+            state = not index.data(model.Clicked)
+
+        index.model().setData(index, state, model.Clicked)
+
+        # Open message box
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText(repr(index.data(model.FormattedError)))
+        msg.setWindowTitle("FormattedError traceback")
+        msg.setDetailedText(str(index.data(model.Traceback)))
+        msg.setStandardButtons(QtWidgets.QMessageBox.Close)
+        msg.exec_()
+
     def on_item_inspected(self, index):
         details = self.data["modals"]["details"]
         details.move(QtGui.QCursor.pos())
@@ -605,6 +620,8 @@ class Window(QtWidgets.QDialog):
                 "text": text,
                 "timestamp": "",
             })
+            self.setData(index, text, model.FormattedError)
+            self.setData(index, text, model.Traceback)
 
         elif index.data(model.Type) == "plugin":
             details.show({

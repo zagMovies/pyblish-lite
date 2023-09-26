@@ -160,6 +160,15 @@ class Item(DPIStyledItemDelegate):
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
             painter.fillRect(body_rect, colors["hover"])
+            # Display the associated error
+            if index.data(model.FormattedError):
+                painter.setFont(fonts["error"])
+                painter.setPen(QtGui.QPen(font_color))
+                error_text = str(index.data(model.FormattedError))
+                error_rect = QtCore.QRectF(option.rect.adjusted(
+                    check_rect.width() + 12, 15, 0, 13))
+                error_text = metrics.elidedText(error_text, QtCore.Qt.ElideRight, error_rect.width() - 20)
+                painter.drawText(error_rect, error_text)
 
         if option.state & QtWidgets.QStyle.State_Selected:
             painter.fillRect(body_rect, colors["selected"])
