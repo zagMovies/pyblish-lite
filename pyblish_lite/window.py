@@ -517,6 +517,8 @@ class Window(QtWidgets.QDialog):
         artist_view.toggled.connect(self.on_item_toggled)
         left_view.toggled.connect(self.on_item_toggled)
         right_view.toggled.connect(self.on_item_toggled)
+        left_view.clicked.connect(self.on_item_clicked)
+        right_view.clicked.connect(self.on_item_clicked)
 
         artist_view.inspected.connect(self.on_item_inspected)
         left_view.inspected.connect(self.on_item_inspected)
@@ -563,6 +565,9 @@ class Window(QtWidgets.QDialog):
         index.model().setData(index, state, model.Expanded)
 
     def on_item_clicked(self, index, state):
+        if not index.data(model.FormattedError):
+            return
+
         if state is None:
             state = not index.data(model.Clicked)
 
