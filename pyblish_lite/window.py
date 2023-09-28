@@ -513,8 +513,6 @@ class Window(QtWidgets.QDialog):
         artist_view.toggled.connect(self.on_item_toggled)
         left_view.toggled.connect(self.on_item_toggled)
         right_view.toggled.connect(self.on_item_toggled)
-        left_view.clicked.connect(self.on_item_clicked)
-        right_view.clicked.connect(self.on_item_clicked)
 
         artist_view.inspected.connect(self.on_item_inspected)
         left_view.inspected.connect(self.on_item_inspected)
@@ -560,24 +558,6 @@ class Window(QtWidgets.QDialog):
 
         index.model().setData(index, state, model.Expanded)
 
-    def on_item_clicked(self, index, state):
-        if not index.data(model.IsExpandable):
-            return
-
-        if state is None:
-            state = not index.data(model.Clicked)
-
-        index.model().setData(index, state, model.Clicked)
-
-        # Open message box
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)
-        msg.setText(repr(index.data(model.FormattedError)))
-        msg.setWindowTitle("FormattedError traceback")
-        msg.setDetailedText(str(index.data(model.Traceback)))
-        msg.setStandardButtons(QtWidgets.QMessageBox.Close)
-        msg.exec_()
-
     def on_item_inspected(self, index):
         details = self.data["modals"]["details"]
         details.move(QtGui.QCursor.pos())
@@ -621,8 +601,6 @@ class Window(QtWidgets.QDialog):
                 "text": text,
                 "timestamp": "",
             })
-            self.setData(index, text, model.FormattedError)
-            self.setData(index, text, model.Traceback)
 
         elif index.data(model.Type) == "plugin":
             details.show({

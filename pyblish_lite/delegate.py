@@ -35,7 +35,6 @@ fonts = {
     "h5": QtGui.QFont("Open Sans", 8 * scale_factor, 800),
     "smallAwesome": QtGui.QFont("FontAwesome", 8 * scale_factor),
     "largeAwesome": QtGui.QFont("FontAwesome", 16 * scale_factor),
-    "error": QtGui.QFont("Open Sans", 8 * scale_factor, 400, italic=True)
 }
 
 icons = {
@@ -72,6 +71,7 @@ class Item(QtWidgets.QStyledItemDelegate):
         check_rect.setWidth(10)
         check_rect.setHeight(check_rect.width())
 
+
         check_color = colors["idle"]
         if index.data(model.IsProcessing) is True:
             check_color = colors["active"]
@@ -102,12 +102,13 @@ class Item(QtWidgets.QStyledItemDelegate):
         label_rect = QtCore.QRectF(option.rect.adjusted(
             check_rect.width() + 25, 0, 0, -2))
 
+
         assert label_rect.width() > 0
 
         label = index.data(model.Label)
-        label = metrics.elidedText(label,
-                                   QtCore.Qt.ElideRight,
-                                   label_rect.width() - 20)
+        label = metrics.elidedText(
+            label, QtCore.Qt.ElideRight, int(label_rect.width() - 20 * self._dpi_scale)
+        )
 
         font_color = colors["idle"]
         if not index.data(model.IsChecked):
@@ -157,15 +158,6 @@ class Item(QtWidgets.QStyledItemDelegate):
                 painter.fillRect(check_rect, check_color)
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
-            # Display the associated error
-            if index.data(model.FormattedError):
-                painter.setFont(fonts["error"])
-                painter.setPen(QtGui.QPen(font_color))
-                error_text = str(index.data(model.FormattedError))
-                error_rect = QtCore.QRectF(option.rect.adjusted(
-                    check_rect.width() + 12, 15, 0, 13))
-                error_text = metrics.elidedText(error_text, QtCore.Qt.ElideRight, error_rect.width() - 20)
-                painter.drawText(error_rect, error_text)
             painter.fillRect(body_rect, colors["hover"])
 
         if option.state & QtWidgets.QStyle.State_Selected:
@@ -175,7 +167,7 @@ class Item(QtWidgets.QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QtCore.QSize(option.rect.width(), 30)
+        return QtCore.QSize(option.rect.width(), int(20 * self._dpi_scale))
 
 
 class Artist(QtWidgets.QStyledItemDelegate):
