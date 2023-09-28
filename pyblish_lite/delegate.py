@@ -167,7 +167,7 @@ class Item(DPIStyledItemDelegate):
                 error_rect = QtCore.QRectF(label_rect)
                 error_rect.adjust(0, body_rect.height()/3, 0, body_rect.height())
                 painter.drawText(error_rect, error_text)
-            painter.fillRect(body_rect, colors["hover"])
+            painter.fillRect(label_rect, colors["hover"])
 
         if option.state & QtWidgets.QStyle.State_Selected:
             painter.fillRect(body_rect, colors["selected"])
