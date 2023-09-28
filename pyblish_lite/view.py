@@ -5,7 +5,6 @@ class Item(QtWidgets.QListView):
     # An item is requesting to be toggled, with optional forced-state
     toggled = QtCore.Signal("QModelIndex", object)
     expand = QtCore.Signal("QModelIndex", object)
-    clicked = QtCore.Signal("QModelIndex", object)
 
     # An item is requesting details
     inspected = QtCore.Signal("QModelIndex")
@@ -64,9 +63,6 @@ class Item(QtWidgets.QListView):
             if len(indexes) <= 1 and event.pos().x() < 20:
                 for index in indexes:
                     self.toggled.emit(index, None)
-            elif len(indexes) <= 1 and 20 < event.pos().x() < 200:
-                for index in indexes:
-                    self.clicked.emit(index, True)
 
         return super(Item, self).mouseReleaseEvent(event)
 
