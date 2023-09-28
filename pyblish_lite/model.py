@@ -26,6 +26,7 @@ Roles:
 from __future__ import unicode_literals
 
 import logging
+import copy
 
 from . import settings
 from .awesome import tags as awesome
@@ -376,6 +377,12 @@ class Instance(Item):
         # Merge `family` and `families` for backwards compatibility
         item.data["__families__"] = ([item.data["family"]] +
                                      item.data.get("families", []))
+
+        # Remove default family
+        if "default" in item.data["__families__"]:
+            current_families = copy.deepcopy(item.data["__families__"])
+            current_families.remove('default')
+            item.data["__families__"] = current_families
 
         return super(Instance, self).append(item)
 
