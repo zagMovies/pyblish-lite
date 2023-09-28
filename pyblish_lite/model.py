@@ -67,7 +67,7 @@ HasWarning = QtCore.Qt.UserRole + 62
 Expanded = QtCore.Qt.UserRole + 64
 Clicked = QtCore.Qt.UserRole + 65
 Duration = QtCore.Qt.UserRole + 11
-Order = QtCore.Qt.UserRole + 12
+Order = QtCore.Qt.UserRole + 18
 # PLUGINS
 
 # Available and context-sensitive actions
