@@ -334,7 +334,9 @@ class Plugin(Item):
         self.setData(index, hasWarning, HasWarning)
         self.setData(index, True, HasProcessed)
         self.setData(index, result["success"], HasSucceeded)
-        self.setData(index, result["order"], Order)
+        self.setData(index, result["plugin"].order, Order)
+        if result.get("order") is not None:
+            self.setData(index, result["order"], Order)
         self.setData(index, result["traceback"], Traceback)
         self.setData(index, result["error"], FormattedError)
 

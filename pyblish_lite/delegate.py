@@ -90,7 +90,10 @@ class Item(QtWidgets.QStyledItemDelegate):
 
         # Add icon to specify plugin type
         # Import plugins order
-        plugin_icon = plugin_icons.get(float(index.data(model.Order)), awesome['question'])
+        if index.data(model.Order) is not None:
+            plugin_icon = plugin_icons.get(float(index.data(model.Order)), awesome['question'])
+        else:
+            plugin_icon = awesome['question']
         icon_rect = QtCore.QRectF(body_rect)
         painter.drawText(icon_rect, plugin_icon)
 
