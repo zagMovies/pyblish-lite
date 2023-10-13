@@ -4,6 +4,7 @@ from .vendor.Qt import QtWidgets, QtGui, QtCore
 
 from . import model
 from .awesome import tags as awesome
+import pyblish.api
 
 colors = {
     "failed": QtGui.QColor("#ff4a4a"),
@@ -45,6 +46,14 @@ icons = {
 }
 
 
+plugin_icons = {
+    pyblish.api.CollectorOrder: awesome['download'],
+    pyblish.api.ValidatorOrder: awesome['check-square'],
+    pyblish.api.ExtractorOrder: awesome['sign-out'],
+    pyblish.api.IntegratorOrder: awesome['recycle'],
+}
+
+
 class Item(QtWidgets.QStyledItemDelegate):
     """Generic delegate for model items"""
 
@@ -58,9 +67,10 @@ class Item(QtWidgets.QStyledItemDelegate):
         body_rect = QtCore.QRectF(option.rect)
 
         check_rect = QtCore.QRectF(body_rect)
-        check_rect.setWidth(check_rect.height())
-        buffer = 6 * self._dpi_scale
-        check_rect.adjust(buffer, buffer, -buffer, -buffer)
+        check_rect.moveBottomLeft(QtCore.QPointF(body_rect.bottomLeft().x() + 15, body_rect.bottomLeft().y() + 3))
+        check_rect.setWidth(10)
+        check_rect.setHeight(check_rect.width())
+
 
         check_color = colors["idle"]
         if index.data(model.IsProcessing) is True:
@@ -78,16 +88,20 @@ class Item(QtWidgets.QStyledItemDelegate):
         elif index.data(model.HasProcessed) is True:
             check_color = colors["ok"]
 
+        # Add icon to specify plugin type
+        # Import plugins order
+        if index.data(model.Order) is not None:
+            plugin_icon = plugin_icons.get(float(index.data(model.Order)), awesome['question'])
+        else:
+            plugin_icon = awesome['question']
+        icon_rect = QtCore.QRectF(body_rect)
+        painter.drawText(icon_rect, plugin_icon)
+
         metrics = painter.fontMetrics()
 
-        label_rect = QtCore.QRectF(
-            option.rect.adjusted(
-                int(check_rect.width() + 12 * self._dpi_scale),
-                int(2 * self._dpi_scale),
-                0,
-                int(-2 * self._dpi_scale),
-            )
-        )
+        label_rect = QtCore.QRectF(option.rect.adjusted(
+            check_rect.width() + 25, 0, 0, -2))
+
 
         assert label_rect.width() > 0
 

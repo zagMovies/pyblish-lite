@@ -65,7 +65,7 @@ HasProcessed = QtCore.Qt.UserRole + 8
 HasWarning = QtCore.Qt.UserRole + 62
 Expanded = QtCore.Qt.UserRole + 64
 Duration = QtCore.Qt.UserRole + 11
-
+Order = QtCore.Qt.UserRole + 18
 # PLUGINS
 
 # Available and context-sensitive actions
@@ -148,6 +148,7 @@ class Item(Abstract):
             IsProcessing: "_is_processing",
             HasProcessed: "_has_processed",
             HasSucceeded: "_has_succeeded",
+            Order: "order",
             HasFailed: "_has_failed",
             IsExpandable: "_is_expandable",
             Expanded: "expanded",
@@ -325,6 +326,12 @@ class Plugin(Item):
         self.setData(index, hasWarning, HasWarning)
         self.setData(index, True, HasProcessed)
         self.setData(index, result["success"], HasSucceeded)
+        self.setData(index, result["plugin"].order, Order)
+        if result.get("order") is not None:
+            self.setData(index, result["order"], Order)
+        self.setData(index, result["traceback"], Traceback)
+        self.setData(index, result["error"], FormattedError)
+
 
         # Once failed, never go back.
         if not self.data(index, HasFailed):
@@ -419,6 +426,7 @@ class Instance(Item):
         self.setData(index, False, IsProcessing)
         self.setData(index, True, HasProcessed)
         self.setData(index, result["success"], HasSucceeded)
+        self.setData(index, result["order"], Order)
 
         # Once failed, never go back.
         if not self.data(index, HasFailed):
