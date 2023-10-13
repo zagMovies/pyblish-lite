@@ -51,6 +51,8 @@ Type = QtCore.Qt.UserRole + 10
 Label = QtCore.Qt.DisplayRole + 0
 Families = QtCore.Qt.DisplayRole + 1
 Icon = QtCore.Qt.DisplayRole + 13
+FormattedError = QtCore.Qt.DisplayRole + 14
+Traceback = QtCore.Qt.DisplayRole + 15
 
 # The item has not been used
 IsIdle = QtCore.Qt.UserRole + 2
@@ -65,6 +67,7 @@ HasProcessed = QtCore.Qt.UserRole + 8
 HasWarning = QtCore.Qt.UserRole + 62
 Expanded = QtCore.Qt.UserRole + 64
 Duration = QtCore.Qt.UserRole + 11
+Clicked = QtCore.Qt.UserRole + 65
 Order = QtCore.Qt.UserRole + 18
 # PLUGINS
 
@@ -135,6 +138,8 @@ class Item(Abstract):
         # Common schema
         self.schema = {
             Label: "label",
+            FormattedError: "formatted_error",
+            Traceback:      "traceback",
             Families: "families",
             Id: "id",
             Actions: "actions",
@@ -150,8 +155,6 @@ class Item(Abstract):
             HasSucceeded: "_has_succeeded",
             Order: "order",
             HasFailed: "_has_failed",
-            IsExpandable: "_is_expandable",
-            Expanded: "expanded",
             Clicked: "clicked",
         }
 
@@ -160,6 +163,8 @@ class Item(Abstract):
 
         for index in self:
             label = index.data(Label)
+            formatted_error = index.data(FormattedError)
+            traceback = index.data(Traceback)
             families = index.data(Families)
             uid = "{families}.{label}".format(**locals())
             state = index.data(IsChecked)
@@ -168,6 +173,8 @@ class Item(Abstract):
     def restore_checkstate(self):
         for index in self:
             label = index.data(Label)
+            formatted_error = index.data(FormattedError)
+            traceback = index.data(Traceback)
             families = index.data(Families)
 
             # Does it have a previous state?
@@ -331,7 +338,6 @@ class Plugin(Item):
             self.setData(index, result["order"], Order)
         self.setData(index, result["traceback"], Traceback)
         self.setData(index, result["error"], FormattedError)
-
 
         # Once failed, never go back.
         if not self.data(index, HasFailed):

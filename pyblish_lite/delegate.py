@@ -30,11 +30,13 @@ record_colors = {
 scale_factors = {"darwin": 1.5}
 scale_factor = scale_factors.get(platform.system().lower(), 1.0)
 fonts = {
-    "h3": QtGui.QFont("Open Sans", 10 * scale_factor, 900),
-    "h4": QtGui.QFont("Open Sans", 8 * scale_factor, 400),
-    "h5": QtGui.QFont("Open Sans", 8 * scale_factor, 800),
-    "smallAwesome": QtGui.QFont("FontAwesome", 8 * scale_factor),
-    "largeAwesome": QtGui.QFont("FontAwesome", 16 * scale_factor),
+    "h3": QtGui.QFont("Open Sans", int(10 * scale_factor), 900),
+    "h4": QtGui.QFont("Open Sans", int(8 * scale_factor), 400),
+    "h5": QtGui.QFont("Open Sans", int(8 * scale_factor), 800),
+    "smallAwesome": QtGui.QFont("FontAwesome", int(8 * scale_factor)),
+    "largeAwesome": QtGui.QFont("FontAwesome", int(16 * scale_factor)),
+    "error": QtGui.QFont("Open Sans", 8 * scale_factor, 400, italic=True),
+
 }
 
 icons = {
@@ -65,11 +67,13 @@ class Item(QtWidgets.QStyledItemDelegate):
         """
 
         body_rect = QtCore.QRectF(option.rect)
+        body_rect.setHeight(40)
 
         check_rect = QtCore.QRectF(body_rect)
-        check_rect.moveBottomLeft(QtCore.QPointF(body_rect.bottomLeft().x() + 15, body_rect.bottomLeft().y() + 3))
-        check_rect.setWidth(10)
+        check_rect.setWidth(20)
         check_rect.setHeight(check_rect.width())
+        check_rect.adjust(6, 6, -6, -6)
+
 
 
         check_color = colors["idle"]
@@ -100,15 +104,16 @@ class Item(QtWidgets.QStyledItemDelegate):
         metrics = painter.fontMetrics()
 
         label_rect = QtCore.QRectF(option.rect.adjusted(
-            check_rect.width() + 25, 0, 0, -2))
+            check_rect.width() + 15, 2, 0, -2))
+        label_rect.setHeight(body_rect.height()/2)
 
 
         assert label_rect.width() > 0
 
         label = index.data(model.Label)
-        label = metrics.elidedText(
-            label, QtCore.Qt.ElideRight, int(label_rect.width() - 20 * self._dpi_scale)
-        )
+        label = metrics.elidedText(label,
+                                   QtCore.Qt.ElideRight,
+                                   label_rect.width() - 20)
 
         font_color = colors["idle"]
         if not index.data(model.IsChecked):
@@ -158,7 +163,15 @@ class Item(QtWidgets.QStyledItemDelegate):
                 painter.fillRect(check_rect, check_color)
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
-            painter.fillRect(body_rect, colors["hover"])
+            # Display the associated error
+            if index.data(model.FormattedError):
+                painter.setFont(fonts["error"])
+                painter.setPen(QtGui.QPen(font_color))
+                error_text = str(index.data(model.FormattedError))
+                error_rect = QtCore.QRectF(label_rect)
+                error_rect.adjust(0, body_rect.height()/3, 0, body_rect.height())
+                painter.drawText(error_rect, error_text)
+            painter.fillRect(label_rect, colors["hover"])
 
         if option.state & QtWidgets.QStyle.State_Selected:
             painter.fillRect(body_rect, colors["selected"])
@@ -167,7 +180,7 @@ class Item(QtWidgets.QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QtCore.QSize(option.rect.width(), int(20 * self._dpi_scale))
+        return QtCore.QSize(option.rect.width(), 30)
 
 
 class Artist(QtWidgets.QStyledItemDelegate):
