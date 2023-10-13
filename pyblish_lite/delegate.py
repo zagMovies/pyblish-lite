@@ -4,6 +4,7 @@ from .vendor.Qt import QtWidgets, QtGui, QtCore
 
 from . import model
 from .awesome import tags as awesome
+import pyblish.api
 
 colors = {
     "failed": QtGui.QColor("#ff4a4a"),
@@ -35,6 +36,7 @@ fonts = {
     "smallAwesome": QtGui.QFont("FontAwesome", int(8 * scale_factor)),
     "largeAwesome": QtGui.QFont("FontAwesome", int(16 * scale_factor)),
     "error": QtGui.QFont("Open Sans", 8 * scale_factor, 400, italic=True),
+
 }
 
 icons = {
@@ -46,16 +48,15 @@ icons = {
 }
 
 
-class DPIStyledItemDelegate(QtWidgets.QStyledItemDelegate):
-    def __init__(self, *args, **kwargs):
-        super(DPIStyledItemDelegate, self).__init__(*args, **kwargs)
-        self._dpi_scale = 1.0
+plugin_icons = {
+    pyblish.api.CollectorOrder: awesome['download'],
+    pyblish.api.ValidatorOrder: awesome['check-square'],
+    pyblish.api.ExtractorOrder: awesome['sign-out'],
+    pyblish.api.IntegratorOrder: awesome['recycle'],
+}
 
-    def set_dpi_scale(self, scale):
-        self._dpi_scale = scale
 
-
-class Item(DPIStyledItemDelegate):
+class Item(QtWidgets.QStyledItemDelegate):
     """Generic delegate for model items"""
 
     def paint(self, painter, option, index):
@@ -73,8 +74,9 @@ class Item(DPIStyledItemDelegate):
         check_rect.setHeight(check_rect.width())
         check_rect.adjust(6, 6, -6, -6)
 
-        check_color = colors["idle"]
 
+
+        check_color = colors["idle"]
         if index.data(model.IsProcessing) is True:
             check_color = colors["active"]
 
@@ -90,14 +92,21 @@ class Item(DPIStyledItemDelegate):
         elif index.data(model.HasProcessed) is True:
             check_color = colors["ok"]
 
-        # Maintain reference to state, so we can restore it once we're done
-        painter.save()
-        painter.setFont(fonts["h4"])
+        # Add icon to specify plugin type
+        # Import plugins order
+        if index.data(model.Order) is not None:
+            plugin_icon = plugin_icons.get(float(index.data(model.Order)), awesome['question'])
+        else:
+            plugin_icon = awesome['question']
+        icon_rect = QtCore.QRectF(body_rect)
+        painter.drawText(icon_rect, plugin_icon)
+
         metrics = painter.fontMetrics()
 
         label_rect = QtCore.QRectF(option.rect.adjusted(
             check_rect.width() + 15, 2, 0, -2))
         label_rect.setHeight(body_rect.height()/2)
+
 
         assert label_rect.width() > 0
 
@@ -114,6 +123,7 @@ class Item(DPIStyledItemDelegate):
         painter.save()
 
         # Draw label
+        painter.setFont(fonts["h4"])
         painter.setPen(QtGui.QPen(font_color))
         painter.drawText(label_rect, label)
 
@@ -133,14 +143,8 @@ class Item(DPIStyledItemDelegate):
             painter.setFont(fonts["smallAwesome"])
             painter.setPen(QtGui.QPen(color))
 
-            icon_rect = QtCore.QRectF(
-                option.rect.adjusted(
-                    int(label_rect.width() + 1 * self._dpi_scale),
-                    int(label_rect.height() / (3 * self._dpi_scale)),
-                    0,
-                    0,
-                )
-            )
+            icon_rect = QtCore.QRectF(option.rect.adjusted(
+                label_rect.width() + 1, label_rect.height() / 3, 0, 0))
             painter.drawText(icon_rect, icons["action"])
 
             painter.restore()
@@ -156,7 +160,7 @@ class Item(DPIStyledItemDelegate):
                 painter.fillRect(check_rect, check_color)
 
         elif not index.data(model.IsIdle) and index.data(model.IsChecked):
-            painter.fillRect(check_rect, check_color)
+                painter.fillRect(check_rect, check_color)
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
             # Display the associated error
@@ -179,7 +183,7 @@ class Item(DPIStyledItemDelegate):
         return QtCore.QSize(option.rect.width(), 30)
 
 
-class Artist(DPIStyledItemDelegate):
+class Artist(QtWidgets.QStyledItemDelegate):
     """Delegate used on Artist page"""
 
     def paint(self, painter, option, index):
@@ -192,42 +196,30 @@ class Artist(DPIStyledItemDelegate):
         |_______|_____________________|___________|
 
         """
-        # Maintain reference to state, so we can restore it once we're done
-        painter.save()
 
         # Layout
-        spacing = 10 * self._dpi_scale
+        spacing = 10
+        metrics = painter.fontMetrics()
 
-        body_rect = QtCore.QRectF(option.rect).adjusted(
-            int(2 * self._dpi_scale),
-            int(2 * self._dpi_scale),
-            int(-8 * self._dpi_scale),
-            int(-2 * self._dpi_scale),
-        )
-        buffer = int(5 * self._dpi_scale)
-        content_rect = body_rect.adjusted(buffer, buffer, -buffer, -buffer)
+        body_rect = QtCore.QRectF(option.rect).adjusted(2, 2, -8, -2)
+        content_rect = body_rect.adjusted(5, 5, -5, -5)
 
         toggle_rect = QtCore.QRectF(body_rect)
-        toggle_rect.setWidth(7 * self._dpi_scale)
-        toggle_rect.adjust(int(1 * self._dpi_scale),
-                           int(1 * self._dpi_scale),
-                           0,
-                           int(-1 * self._dpi_scale)
-        )
+        toggle_rect.setWidth(7)
+        toggle_rect.adjust(1, 1, 0, -1)
 
         icon_rect = QtCore.QRectF(content_rect)
-        icon_rect.translate(toggle_rect.width() + spacing, 3 * self._dpi_scale)
-        icon_rect.setWidth(35 * self._dpi_scale)
-        icon_rect.setHeight(35 * self._dpi_scale)
+        icon_rect.translate(toggle_rect.width() + spacing, 3)
+        icon_rect.setWidth(35)
+        icon_rect.setHeight(35)
 
         duration_rect = QtCore.QRectF(content_rect)
         duration_rect.translate(content_rect.width() - 50, 0)
 
-        label_font = fonts["h3"]
-        label_metrics = QtGui.QFontMetrics(label_font)
         label_rect = QtCore.QRectF(content_rect)
-        label_rect.translate(icon_rect.width() + spacing, 0)
-        label_rect.setHeight(label_metrics.lineSpacing() + spacing)
+        label_rect.translate(icon_rect.width() +
+                             spacing, 0)
+        label_rect.setHeight(metrics.lineSpacing() + spacing)
 
         families_rect = QtCore.QRectF(label_rect)
         families_rect.translate(0, label_rect.height())
@@ -252,19 +244,20 @@ class Artist(DPIStyledItemDelegate):
         families = ", ".join(index.data(model.Families))
 
         # Elide
-        label = label_metrics.elidedText(
-            label, QtCore.Qt.ElideRight, int(label_rect.width())
-        )
+        label = metrics.elidedText(label,
+                                   QtCore.Qt.ElideRight,
+                                   label_rect.width())
 
-        family_font = fonts["h5"]
-        family_metrics = QtGui.QFontMetrics(family_font)
-        families = family_metrics.elidedText(
-            families, QtCore.Qt.ElideRight, int(label_rect.width())
-        )
+        families = metrics.elidedText(families,
+                                      QtCore.Qt.ElideRight,
+                                      label_rect.width())
 
         font_color = colors["idle"]
         if not index.data(model.IsChecked):
             font_color = colors["inactive"]
+
+        # Maintan reference to state, so we can restore it once we're done
+        painter.save()
 
         # Draw background
         painter.fillRect(body_rect, colors["hover"])
@@ -274,11 +267,11 @@ class Artist(DPIStyledItemDelegate):
         painter.drawText(icon_rect, icon)
 
         # Draw label
-        painter.setFont(label_font)
+        painter.setFont(fonts["h3"])
         painter.drawText(label_rect, label)
 
         # Draw families
-        painter.setFont(family_font)
+        painter.setFont(fonts["h5"])
         painter.setPen(QtGui.QPen(colors["inactive"]))
         painter.drawText(families_rect, families)
 
@@ -293,7 +286,7 @@ class Artist(DPIStyledItemDelegate):
                 painter.fillRect(toggle_rect, check_color)
 
         elif not index.data(model.IsIdle) and index.data(model.IsChecked):
-            painter.fillRect(toggle_rect, check_color)
+                painter.fillRect(toggle_rect, check_color)
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
             painter.fillRect(body_rect, colors["hover"])
@@ -308,22 +301,18 @@ class Artist(DPIStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QtCore.QSize(option.rect.width(), int(80 * self._dpi_scale))
+        return QtCore.QSize(option.rect.width(), 80)
 
 
-class Terminal(DPIStyledItemDelegate):
+class Terminal(QtWidgets.QStyledItemDelegate):
     """Delegate used exclusively for the Terminal"""
 
     def paint(self, painter, option, index):
         """Paint text"""
 
-        buffer = int(3 * self._dpi_scale)
-        icon_rect = QtCore.QRectF(option.rect).adjusted(
-            buffer, buffer, -buffer, -buffer
-        )
-        size = 14 * self._dpi_scale
-        icon_rect.setWidth(size)
-        icon_rect.setHeight(size)
+        icon_rect = QtCore.QRectF(option.rect).adjusted(3, 3, -3, -3)
+        icon_rect.setWidth(14)
+        icon_rect.setHeight(14)
 
         icon_color = colors["idle"]
         icon = icons[index.data(model.Type)]
@@ -334,38 +323,28 @@ class Terminal(DPIStyledItemDelegate):
         elif index.data(model.Type) == "error":
             icon_color = colors["warning"]
 
-        label_rect = QtCore.QRectF(
-            option.rect.adjusted(
-                int(icon_rect.width() + 12 * self._dpi_scale),
-                int(2 * self._dpi_scale),
-                0,
-                int(-2 * self._dpi_scale),
-            )
-        )
+        metrics = painter.fontMetrics()
+
+        label_rect = QtCore.QRectF(option.rect.adjusted(
+            icon_rect.width() + 12, 2, 0, -2))
 
         assert label_rect.width() > 0
 
-        label_font = fonts["h4"]
-        label_metrics = QtGui.QFontMetrics(label_font)
         label = index.data(model.Label)
-        label = label_metrics.elidedText(
-            label, QtCore.Qt.ElideRight, int(label_rect.width() - 20 * self._dpi_scale)
-        )
+        label = metrics.elidedText(label,
+                                   QtCore.Qt.ElideRight,
+                                   label_rect.width() - 20)
 
         font_color = colors["idle"]
 
         hover = QtGui.QPainterPath()
-        hover.addRect(
-            QtCore.QRectF(option.rect).adjusted(
-                0, 0, int(-1 * self._dpi_scale), int(-1 * self._dpi_scale)
-            )
-        )
+        hover.addRect(QtCore.QRectF(option.rect).adjusted(0, 0, -1, -1))
 
         # Maintain reference to state, so we can restore it once we're done
         painter.save()
 
         # Draw label
-        painter.setFont(label_font)
+        painter.setFont(fonts["h4"])
         painter.setPen(QtGui.QPen(font_color))
         painter.drawText(label_rect, label)
 
@@ -384,4 +363,4 @@ class Terminal(DPIStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QtCore.QSize(option.rect.width(), int(20 * self._dpi_scale))
+        return QtCore.QSize(option.rect.width(), 20)

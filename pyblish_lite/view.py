@@ -6,6 +6,7 @@ class Item(QtWidgets.QListView):
     toggled = QtCore.Signal("QModelIndex", object)
     clicked = QtCore.Signal("QModelIndex", object)
 
+
     # An item is requesting details
     inspected = QtCore.Signal("QModelIndex")
 
@@ -195,7 +196,7 @@ class Details(QtWidgets.QDialog):
             if key != "text":
                 value = widget.fontMetrics().elidedText(value,
                                                         QtCore.Qt.ElideRight,
-                                                        int(widget.width()))
+                                                        widget.width())
             widget.setText(value)
             widget.updateGeometry()
 

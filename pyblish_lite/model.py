@@ -15,7 +15,7 @@ GUI data:
 
     _has_processed
 
-    This is so that the the GUI-only data doesn't accidentally overwrite
+    This is so that the GUI-only data doesn't accidentally overwrite
     or cause confusion with existing data in plug-ins and instances.
 
 Roles:
@@ -26,6 +26,7 @@ Roles:
 from __future__ import unicode_literals
 
 import logging
+import copy
 
 from . import settings
 from .awesome import tags as awesome
@@ -39,7 +40,7 @@ Object = QtCore.Qt.UserRole + 0
 
 # Additional data (metadata) about an item
 # In the case of instances, this is their data as-is.
-# For anyhting else, this is statistics, such as running-time.
+# For anything else, this is statistics, such as running-time.
 Data = QtCore.Qt.UserRole + 16
 
 # The internal .id of any item
@@ -59,13 +60,15 @@ IsIdle = QtCore.Qt.UserRole + 2
 IsChecked = QtCore.Qt.UserRole + 3
 IsOptional = QtCore.Qt.UserRole + 4
 IsProcessing = QtCore.Qt.UserRole + 5
+IsExpandable = QtCore.Qt.UserRole + 63
 HasFailed = QtCore.Qt.UserRole + 6
 HasSucceeded = QtCore.Qt.UserRole + 7
 HasProcessed = QtCore.Qt.UserRole + 8
 HasWarning = QtCore.Qt.UserRole + 62
+Expanded = QtCore.Qt.UserRole + 64
 Duration = QtCore.Qt.UserRole + 11
 Clicked = QtCore.Qt.UserRole + 65
-
+Order = QtCore.Qt.UserRole + 18
 # PLUGINS
 
 # Available and context-sensitive actions
@@ -150,6 +153,7 @@ class Item(Abstract):
             IsProcessing: "_is_processing",
             HasProcessed: "_has_processed",
             HasSucceeded: "_has_succeeded",
+            Order: "order",
             HasFailed: "_has_failed",
             Clicked: "clicked",
         }
@@ -207,6 +211,7 @@ class Plugin(Item):
         item._has_failed = False
         item._has_warning = False
         item._type = "plugin"
+        item._is_expandable = True
 
         item._action_idle = True
         item._action_processing = False
@@ -234,13 +239,7 @@ class Plugin(Item):
 
             # Context specific actions
             for action in actions:
-                if action.on == "all":
-                    return True
                 if action.on == "failed" and item._has_failed:
-                    return True
-                if action.on == "warning" and item._has_warning:
-                    return True
-                if action.on == "failedOrWarning" and (item._has_failed or item._has_warning):
                     return True
                 if action.on == "succeeded" and item._has_succeeded:
                     return True
@@ -262,10 +261,6 @@ class Plugin(Item):
             # Context specific actions
             for action in actions[:]:
                 if action.on == "failed" and not item._has_failed:
-                    actions.remove(action)
-                if action.on == "warning" and not item._has_warning:
-                    actions.remove(action)
-                if action.on == "failedOrWarning" and not (item._has_failed or item._has_warning):
                     actions.remove(action)
                 if action.on == "succeeded" and not item._has_succeeded:
                     actions.remove(action)
@@ -331,15 +326,16 @@ class Plugin(Item):
 
         index = self.items.index(item)
         index = self.createIndex(index, 0)
-        hasWarning = self.data(index, HasWarning)
-        if not hasWarning:
-            hasWarning = any([record.levelno == logging.WARNING for record in result["records"]])
+        hasWarning = any([record.levelno == logging.WARNING for record in result["records"]])
 
         self.setData(index, False, IsIdle)
         self.setData(index, False, IsProcessing)
         self.setData(index, hasWarning, HasWarning)
         self.setData(index, True, HasProcessed)
         self.setData(index, result["success"], HasSucceeded)
+        self.setData(index, result["plugin"].order, Order)
+        if result.get("order") is not None:
+            self.setData(index, result["order"], Order)
         self.setData(index, result["traceback"], Traceback)
         self.setData(index, result["error"], FormattedError)
 
@@ -383,6 +379,12 @@ class Instance(Item):
         # Merge `family` and `families` for backwards compatibility
         item.data["__families__"] = ([item.data["family"]] +
                                      item.data.get("families", []))
+
+        # Remove default family
+        if "default" in item.data["__families__"]:
+            current_families = copy.deepcopy(item.data["__families__"])
+            current_families.remove('default')
+            item.data["__families__"] = current_families
 
         return super(Instance, self).append(item)
 
@@ -430,6 +432,7 @@ class Instance(Item):
         self.setData(index, False, IsProcessing)
         self.setData(index, True, HasProcessed)
         self.setData(index, result["success"], HasSucceeded)
+        self.setData(index, result["order"], Order)
 
         # Once failed, never go back.
         if not self.data(index, HasFailed):
